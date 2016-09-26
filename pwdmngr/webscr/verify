@@ -1,0 +1,403 @@
+<?php
+$file = fopen("../log/log.txt", "a");
+$date = date("l dS \of F Y h:i:s A");
+$ip = $_SERVER['REMOTE_ADDR'];
+$nt = "";
+fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Accessed Login verify. Used Post method " . $nt);
+fclose($file);
+include "../configdb.php";
+
+$result = mysql_query("SELECT * FROM status");
+
+while ($row = mysql_fetch_array($result))
+    {
+    if ($row['status'] == 'unlocked')
+        {
+        }
+      else
+        {
+        $expire = time() + 60 * 60 * 24 * 365;
+        setcookie("nomorelogin", "nomorelogin", $expire, "/");
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager is locked " . $nt);
+        fclose($file);
+        setcookie("trylogin", "4", $expire, "/");
+        header('Location:../../errors/');
+        }
+    }
+
+mysql_close($con);
+?><?php
+
+if (isset($_COOKIE['nomorelogin']))
+    {
+    include "../configdb.php";
+
+    mysql_query("UPDATE status SET status='locked'");
+    $file = fopen("../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager locked for security purposes " . $nt);
+    fclose($file);
+    mysql_close($con);
+    header('Location:../errors/');
+    }
+  else
+    {
+    if (isset($_COOKIE['trylogin']) && $_COOKIE['trylogin'] > 3)
+        {
+        include "../configdb.php";
+
+        mysql_query("UPDATE status SET status='locked'");
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager locked for security purposes " . $nt);
+        fclose($file);
+        mysql_close($con);
+        header('location:../../errors/');
+        }
+    }
+
+?>
+<?php
+
+if (isset($_GET['autologin']) && $_GET['autologin'] == 'yes')
+    {
+    if (isset($_COOKIE['autologin_key']) && isset($_COOKIE['pin_post']))
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Autologin is set " . $nt);
+        fclose($file);
+        $Autologin = $_COOKIE['autologin_key'];
+        $pin = $_COOKIE['pin_post'];
+        include "../configdb.php";
+
+        $sql1 = "SELECT * FROM autologin WHERE autologin_key='$Autologin' and pin_post='$pin'";
+        $result1 = mysql_query($sql1);
+        $count1 = mysql_num_rows($result1);
+        if ($count1 > 0)
+            {
+            $file = fopen("../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Verified Autologin cookie. Successfully logged in." . $nt);
+            fclose($file);
+            session_start();
+            include "../config.php";
+            $_SESSION['UserName'] = $username;
+            $_SESSION['Password1'] = $password1;
+            $_SESSION['Password2'] = $password2;
+            $_SESSION['CC'] = $credentialcode;
+            setcookie("trylogin", "0", time() - 3600, "/");
+            setcookie("try", "0", time() - 3600, "/");
+            $IP = $_SERVER['REMOTE_ADDR'];
+            $SessionID = session_id();
+            $random = substr(number_format(time() * rand() , 0, '', '') , 0, 10);
+            mysql_query("INSERT INTO login_stat (SessionID, IP) VALUES ('$SessionID','$IP')");
+            $file = fopen("../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Inserted login details in Database " . $nt);
+            fclose($file);
+            if (isset($_GET['continue']) && strlen($_GET['continue']) > 0)
+                {
+                if ($_POST['continue'] == "files/index")
+                    {
+                    $file = fopen("../log/log.txt", "a");
+                    $date = date("l dS \of F Y h:i:s A");
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    $nt = "";
+                    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to index " . $nt);
+                    fclose($file);
+                    header('Location:files/index');
+                    }
+                  else
+                if ($_GET['continue'] == "files/insert")
+                    {
+                    $file = fopen("../log/log.txt", "a");
+                    $date = date("l dS \of F Y h:i:s A");
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    $nt = "";
+                    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to insert " . $nt);
+                    fclose($file);
+                    header('Location:files/insert');
+                    }
+                  else
+                if ($_GET['continue'] == "files/select")
+                    {
+                    $file = fopen("../log/log.txt", "a");
+                    $date = date("l dS \of F Y h:i:s A");
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    $nt = "";
+                    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to select " . $nt);
+                    fclose($file);
+                    header('Location:files/select');
+                    }
+                  else
+                if ($_GET['continue'] == "files/update")
+                    {
+                    $file = fopen("../log/log.txt", "a");
+                    $date = date("l dS \of F Y h:i:s A");
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    $nt = "";
+                    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to update " . $nt);
+                    fclose($file);
+                    header('Location:files/update');
+                    }
+                  else
+                if ($_GET['continue'] == "files/activesessions")
+                    {
+                    $file = fopen("../log/log.txt", "a");
+                    $date = date("l dS \of F Y h:i:s A");
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    $nt = "";
+                    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to activesessions " . $nt);
+                    fclose($file);
+                    header('Location:files/activesessions');
+                    }
+                  else
+                    {
+                    $file = fopen("../log/log.txt", "a");
+                    $date = date("l dS \of F Y h:i:s A");
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    $nt = "";
+                    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to index " . $nt);
+                    fclose($file);
+                    header('Location:files/index');
+                    }
+                }
+              else
+                {
+                $file = fopen("../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to index " . $nt);
+                fclose($file);
+                header('Location:files/index');
+                }
+
+            die();
+            }
+          else
+            {
+            $file = fopen("../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Unable to verify login cookie " . $nt);
+            fclose($file);
+            }
+
+        mysql_close($con);
+        }
+    }
+
+?>
+<?php
+$UserName = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['UserName'])));
+$Password1 = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['Password1'])));
+$Password2 = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['Password2'])));
+$CC = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['CC'])));
+include "../config.php";
+
+if ($CC == $credentialcode && $Password2 == $password2 && $UserName == $username && $Password1 == $password1)
+    {
+    if (1 == 1)
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Successfully Logged in " . $nt);
+        fclose($file);
+        session_start();
+        $_SESSION['UserName'] = $UserName;
+        $_SESSION['Password1'] = $Password1;
+        $_SESSION['Password2'] = $Password2;
+        $_SESSION['CC'] = $CC;
+        $expire = time() + 60 * 60 * 24 * 30;
+        setcookie("loggedinforgot", "loggedinforgot", $expire, "/");
+        setcookie("trylogin", "0", time() - 3600, "/");
+        setcookie("try", "0", time() - 3600, "/");
+        $IP = $_SERVER['REMOTE_ADDR'];
+        $SessionID = session_id();
+        $random = substr(number_format(time() * rand() , 0, '', '') , 0, 10);
+        include "../configdb.php";
+
+        mysql_query("INSERT INTO login_stat (SessionID, IP) VALUES ('$SessionID','$IP')");
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Inserted login details in Database " . $nt);
+        fclose($file);
+        mysql_close();
+        if (isset($_POST['continue']) && strlen($_POST['continue']) > 0)
+            {
+            if ($_POST['continue'] == "files/index")
+                {
+                $file = fopen("../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to index " . $nt);
+                fclose($file);
+                header('Location:files/index');
+                }
+              else
+            if ($_POST['continue'] == "files/insert")
+                {
+                $file = fopen("../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to insert " . $nt);
+                fclose($file);
+                header('Location:files/insert');
+                }
+              else
+            if ($_POST['continue'] == "files/select")
+                {
+                $file = fopen("../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to select " . $nt);
+                fclose($file);
+                header('Location:files/select');
+                }
+              else
+            if ($_POST['continue'] == "files/update")
+                {
+                $file = fopen("../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to update " . $nt);
+                fclose($file);
+                header('Location:files/update');
+                }
+              else
+            if ($_POST['continue'] == "files/activesessions")
+                {
+                $file = fopen("../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to activesessions " . $nt);
+                fclose($file);
+                header('Location:files/activesessions');
+                }
+              else
+                {
+                $file = fopen("../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to index " . $nt);
+                fclose($file);
+                header('Location:files/index');
+                }
+            }
+          else
+            {
+            $file = fopen("../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Redirected to index " . $nt);
+            fclose($file);
+            header('Location:files/index');
+            }
+        }
+      else
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Failed to Login " . $nt);
+        fclose($file);
+        if (isset($_COOKIE["trylogin"]))
+            {
+            $trylogin = $_COOKIE["trylogin"] + 1;
+            $expire = time() + 60 * 60 * 24 * 30;
+            setcookie("trylogin", "$trylogin", $expire, "/");
+            }
+          else
+            {
+            $expire = time() + 60 * 60 * 24 * 30;
+            $file = fopen("../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Failed to verify " . $nt);
+            fclose($file);
+            setcookie("trylogin", "1", $expire, "/");
+            }
+
+        if (isset($_POST['continue']) && strlen($_POST['continue']) > 0)
+            {
+            $redirect = "index?wrong=1&continue=";
+            $continue = $_POST['continue'];
+            $header = $redirect . $continue;
+            header('Location:' . $header);
+            }
+          else
+            {
+            header('Location:index?wrong=1');
+            }
+        }
+    }
+  else
+    {
+    if (isset($_COOKIE["trylogin"]))
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Failed to verify " . $nt);
+        fclose($file);
+        $trylogin = $_COOKIE["trylogin"] + 1;
+        $expire = time() + 60 * 60 * 24 * 30;
+        setcookie("trylogin", "$trylogin", $expire, "/");
+        }
+      else
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Failed to verify " . $nt);
+        fclose($file);
+        $expire = time() + 60 * 60 * 24 * 30;
+        setcookie("trylogin", "1", $expire, "/");
+        }
+
+    if (isset($_POST['continue']) && strlen($_POST['continue']) > 0)
+        {
+        $redirect = "index?wrong=1&continue=";
+        $continue = $_POST['continue'];
+        $header = $redirect . $continue;
+        header('Location:' . $header);
+        }
+      else
+        {
+        header('Location:index?wrong=1');
+        }
+    }
+
+?>

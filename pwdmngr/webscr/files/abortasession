@@ -1,0 +1,172 @@
+<?php
+$file = fopen("../../log/log.txt", "a");
+$date = date("l dS \of F Y h:i:s A");
+$ip = $_SERVER['REMOTE_ADDR'];
+$nt = "";
+fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Accessed abortsession " . $nt);
+fclose($file);
+include "../../configdb.php";
+;
+$result = mysql_query("SELECT * FROM status");
+
+while ($row = mysql_fetch_array($result))
+    {
+    $status = $row['status'];
+    }
+
+if ($status == 'unlocked')
+    {
+    $IP = $_SERVER['REMOTE_ADDR'];
+    $SessionID = $_COOKIE['PHPSESSID'];
+    $result = mysql_query("SELECT * FROM login_stat WHERE IP='$IP' AND SessionID='$SessionID'");
+    $count = mysql_num_rows($result);
+    if ($count > 0)
+        {
+        }
+      else
+        {
+        session_start();
+        session_destroy();
+        setcookie("PHPSESSID", "", time() - 3600, "/");
+        }
+
+    session_start();
+    if (isset($_SESSION['UserName']) && isset($_SESSION['Password1']) && isset($_SESSION['Password2']) && isset($_SESSION['CC']))
+        {
+        $id1 = $_GET['id'];
+        $SessionID1 = $_GET['SessionID'];
+        $result1 = mysql_query("SELECT * FROM login_stat WHERE id='$id1' AND SessionID='$SessionID1'");
+        $count1 = mysql_num_rows($result1);
+        if ($count1 > 0)
+            {
+            mysql_query("DELETE FROM login_stat WHERE id='$id1' AND SessionID='$SessionID1'");
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Successfully destroyed a session with session id " . $SessionID1 . " " . $nt);
+            fclose($file);
+            echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
+<html xmlns=\"http://www.w3.org/1999/xhtml\">
+<head>
+<title>Successfully Destroyed Selected Session</title>
+<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />
+<noscript>
+<meta http-equiv=\"refresh\" content=\"0; URL=pwd/non-js.php\">
+</noscript>
+<script type=\"text/javascript\">
+var message=\"\";
+function clickIE() {if (document.all) {(message);return false;}}
+function clickNS(e) {if 
+(document.layers||(document.getElementById)) {
+if(!document.all){
+if (e.which==2||e.which==3) {(message);return false;}}}}
+if (document.layers) 
+{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;}
+else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;}
+document.oncontextmenu=new Function(\"return false\");
+</script>
+<style type=\"text/css\">
+#noscript-warning{font-family:sans-serif;position:fixed;top:0px;left:0px;width:100%;z-index:101;text-align:center;font-size:12px;color:red;font-weight:bold;background-color:lightyellow;padding:5px 0px 5px 0px;}
+</style>
+</head>
+<body class=\"sub\">
+<noscript>
+        <div id=\"noscript-warning\">Password Manager doesn't work without JavaScript enabled. Please enable JavaScript or change your Browser. <a href=\"pwd/non-js.php\">Click Here</a> to learn more<img src=\"http://pixel.quantserve.com/pixel/p-c1rF4kxgLUzNc.gif\" alt=\"\" class=\"dno\" /></div>
+    </noscript><br />
+<table width=\"425\" border=\"0\" align=\"center\" bgcolor=\"lightyellow\">
+  <tr>
+    <td colspan=\"2\"><h2 align=\"center\">Successfully Destroyed Selected Session</h2></td>
+  </tr>
+  <tr>
+    <td width=\"382\"><font color=\"blue\" size=\"2\" face=\"arial\"><b>The Active Session with ID <b><font color=\"teal\" size=\"2\" face=\"arial\">" . $id1 . "</font></b> and Session ID <b><font color=\"teal\" size=\"2\" face=\"arial\">" . $SessionID1 . "</font></b> was successfully destroyed</b></font></td>
+  </tr>
+</table>
+<br /><br />
+<center>
+<p>
+    <a href=\"http://validator.w3.org/check?uri=referer\"><img
+      src=\"http://www.w3.org/Icons/valid-xhtml10\" alt=\"Valid XHTML 1.0 Transitional\" height=\"31\" width=\"88\" /></a>
+  </p>
+  </center>
+</body>
+</html>";
+            }
+          else
+            {
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Failed to abort a session because no such session was found in database " . $nt);
+            fclose($file);
+            echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
+<html xmlns=\"http://www.w3.org/1999/xhtml\">
+<head>
+<title>Not Found</title>
+<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />
+<noscript>
+<meta http-equiv=\"refresh\" content=\"0; URL=pwd/non-js.php\">
+</noscript>
+<script type=\"text/javascript\">
+var message=\"\";
+function clickIE() {if (document.all) {(message);return false;}}
+function clickNS(e) {if 
+(document.layers||(document.getElementById)) {
+if(!document.all){
+if (e.which==2||e.which==3) {(message);return false;}}}}
+if (document.layers) 
+{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;}
+else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;}
+document.oncontextmenu=new Function(\"return false\");
+</script>
+<style type=\"text/css\">
+#noscript-warning{font-family:sans-serif;position:fixed;top:0px;left:0px;width:100%;z-index:101;text-align:center;font-size:12px;color:red;font-weight:bold;background-color:lightyellow;padding:5px 0px 5px 0px;}
+</style>
+</head>
+<body class=\"sub\">
+<noscript>
+        <div id=\"noscript-warning\">Password Manager doesn't work without JavaScript enabled. Please enable JavaScript or change your Browser. <a href=\"pwd/non-js.php\">Click Here</a> to learn more<img src=\"http://pixel.quantserve.com/pixel/p-c1rF4kxgLUzNc.gif\" alt=\"\" class=\"dno\" /></div>
+    </noscript><br />
+<table width=\"425\" border=\"0\" align=\"center\" bgcolor=\"lightyellow\">
+  <tr>
+    <td colspan=\"2\"><h2 align=\"center\">Not Found</h2></td>
+  </tr>
+  <tr>
+    <td width=\"382\"><font color=\"blue\" size=\"2\" face=\"arial\"><b>No such Sessions found in the Database to destroy. It is possible that the session is already destroyed.</b></font></td>
+  </tr>
+</table>
+<br /><br />
+<center>
+<p>
+    <a href=\"http://validator.w3.org/check?uri=referer\"><img
+      src=\"http://www.w3.org/Icons/valid-xhtml10\" alt=\"Valid XHTML 1.0 Transitional\" height=\"31\" width=\"88\" /></a>
+  </p>
+  </center>
+</body>
+</html>";
+            }
+        }
+      else
+        {
+        $file = fopen("../../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Not logged in Redirected to login page " . $nt);
+        fclose($file);
+        header('Location:../index?nologin=1&continue=files/activesessions');
+        }
+    }
+  else
+    {
+    $file = fopen("../../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager is locked " . $nt);
+    fclose($file);
+    header('Location:../../errors/');
+    }
+
+?>

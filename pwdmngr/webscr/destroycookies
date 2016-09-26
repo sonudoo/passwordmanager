@@ -1,0 +1,140 @@
+<?php
+$file = fopen("../log/log.txt", "a");
+$date = date("l dS \of F Y h:i:s A");
+$ip = $_SERVER['REMOTE_ADDR'];
+$nt = "";
+fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Accessed destroycookies " . $nt);
+fclose($file);
+include "../configdb.php";
+
+$result = mysql_query("SELECT * FROM status");
+
+while ($row = mysql_fetch_array($result))
+    {
+    $status = $row['status'];
+    }
+
+if ($status == 'unlocked')
+    {
+    $result1 = mysql_query("SELECT * FROM unlockednow");
+    while ($row1 = mysql_fetch_array($result1))
+        {
+        $key = $row1['unlockednow'];
+        }
+
+    if ($key == 'unlockednow')
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Destroyed all cookies after unlocking Password Manager " . $nt);
+        fclose($file);
+        setcookie("trylogin", "", time() - 3600, "/");
+        setcookie("nomorelogin", "", time() - 3600, "/");
+        setcookie("try", "", time() - 3600, "/");
+        setcookie("nomoretry", "", time() - 3600, "/");
+        header('location:../errors/locked/unlock_successful.php');
+        }
+      else
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Failed to destroy cookie due to error or direct access " . $nt);
+        fclose($file);
+        echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
+<html xmlns=\"http://www.w3.org/1999/xhtml\">
+<head>
+<noscript>
+<meta http-equiv=\"refresh\" content=\"0; URL=../non-js.php\">
+</noscript>
+<script type=\"text/javascript\">
+var message=\"\";
+function clickIE() {if (document.all) {(message);return false;}}
+function clickNS(e) {if 
+(document.layers||(document.getElementById)) {
+if(!document.all){
+if (e.which==2||e.which==3) {(message);return false;}}}}
+if (document.layers) 
+{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;}
+else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;}
+document.oncontextmenu=new Function(\"return false\");
+</script>
+<title>Failed</title>
+<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />
+</head>
+<body class=\"sub\">
+<table width=\"425\" border=\"0\" align=\"center\" bgcolor=\"lightyellow\">
+  <tr>
+    <td colspan=\"2\"><h2 align=\"center\">Failed to destroy cookies</h2></td>
+  </tr>
+  <tr>
+    <td width=\"382\"><b><font color=\"red\" size=\"2\" face=\"arial\">A recent cookies or Database Query error has resulted in destruction of Internal Program and failing to destroy Cookies. Password Manager apologizes for this error. Please restart your work to continue.</font></b></td>
+  </tr>
+</table>
+<br /><br />
+<center>
+<p>
+    <a href=\"http://validator.w3.org/check?uri=referer\"><img
+      src=\"http://www.w3.org/Icons/valid-xhtml10\" alt=\"Valid XHTML 1.0 Transitional\" height=\"31\" width=\"88\" /></a>
+  </p>
+  </center>
+</body>
+</html>
+";
+        }
+    }
+  else
+    {
+    $file = fopen("../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Failed to destroy cookie due to error or direct access " . $nt);
+    fclose($file);
+    echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
+<html xmlns=\"http://www.w3.org/1999/xhtml\">
+<head>
+<noscript>
+<meta http-equiv=\"refresh\" content=\"0; URL=pwd/non-js.php\">
+</noscript>
+<script type=\"text/javascript\">
+var message=\"\";
+function clickIE() {if (document.all) {(message);return false;}}
+function clickNS(e) {if 
+(document.layers||(document.getElementById)) {
+if(!document.all){
+if (e.which==2||e.which==3) {(message);return false;}}}}
+if (document.layers) 
+{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;}
+else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;}
+document.oncontextmenu=new Function(\"return false\");
+</script>
+<title>Failed</title>
+<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />
+</head>
+<body class=\"sub\">
+<table width=\"425\" border=\"0\" align=\"center\" bgcolor=\"lightyellow\">
+  <tr>
+    <td colspan=\"2\"><h2 align=\"center\">Failed to destroy cookies</h2></td>
+  </tr>
+  <tr>
+    <td width=\"382\"><b><font color=\"red\" size=\"2\" face=\"arial\">A recent cookies or Database Query error has resulted in destruction of Internal Program and failing to destroy Cookies. Password Manager apologizes for this error. Please restart your work to continue.</font></b></td>
+  </tr>
+</table>
+<br /><br />
+<center>
+<p>
+    <a href=\"http://validator.w3.org/check?uri=referer\"><img
+      src=\"http://www.w3.org/Icons/valid-xhtml10\" alt=\"Valid XHTML 1.0 Transitional\" height=\"31\" width=\"88\" /></a>
+  </p>
+  </center>
+</body>
+</html>
+";
+    }
+
+mysql_close($con);
+?>

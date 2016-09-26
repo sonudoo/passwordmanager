@@ -1,0 +1,168 @@
+<?php
+$file = fopen("../../log/log.txt", "a");
+$date = date("l dS \of F Y h:i:s A");
+$ip = $_SERVER['REMOTE_ADDR'];
+$nt = "";
+fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Accessed checkpoint3 Used post method" . $nt);
+fclose($file);
+include "../../configdb.php";
+
+if (!$con)
+    {
+    die('Could not connect: ' . mysql_error());
+    }
+
+$result = mysql_query("SELECT * FROM status");
+
+while ($row = mysql_fetch_array($result))
+    {
+    $status = $row['status'];
+    }
+
+if ($status == 'unlocked')
+    {
+    $IP = $_SERVER['REMOTE_ADDR'];
+    $SessionID = $_COOKIE['PHPSESSID'];
+    $result = mysql_query("SELECT * FROM login_stat WHERE IP='$IP' AND SessionID='$SessionID'");
+    $count = mysql_num_rows($result);
+    if ($count > 0)
+        {
+        }
+      else
+        {
+        session_start();
+        session_destroy();
+        setcookie("PHPSESSID", "", time() - 3600, "/");
+        }
+
+    mysql_close($con);
+    session_start();
+    if (isset($_SESSION['UserName']) && isset($_SESSION['Password1']) && isset($_SESSION['Password2']) && isset($_SESSION['CC']))
+        {
+        include "../../configdb.php";
+
+        $Website = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['Website'])));
+        $UserName = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['UserName'])));
+        $Password = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['Password'])));
+        $UserName1 = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['UserName1'])));
+        $sql = "SELECT * FROM pwdmngr WHERE Website='$Website'";
+        $result = mysql_query($sql);
+        $count = mysql_num_rows($result);
+        if ($count == 1)
+            {
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Successfully found record for Website " . $Website . "" . $nt);
+            fclose($file);
+            $row = mysql_fetch_array($result) or die(mysql_error());
+            $ExistUserName = $row['UserName'];
+            $ExistPassword = $row['Password'];
+            $NewPassword = $Password;
+            include "../../config.php";
+
+            $encrypt = $Password;
+            $encrypt = serialize($encrypt);
+            $iv = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_CBC) , MCRYPT_DEV_URANDOM);
+            $key = pack('H*', $key);
+            $mac = hash_hmac('sha256', $encrypt, substr(bin2hex($key) , -32));
+            $passcrypt = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $encrypt . $mac, MCRYPT_MODE_CBC, $iv);
+            $encoded = base64_encode($passcrypt) . '|' . base64_encode($iv);
+            $Password = $encoded;
+            $sql1 = "UPDATE pwdmngr SET UserName='$UserName', Password='$Password' WHERE Website='$Website';";
+            $result1 = mysql_query($sql1);
+            if ($result1)
+                {
+                $file = fopen("../../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Successfully updated record for Website " . $Website . "" . $nt);
+                fclose($file);
+                echo "<center><table width=400 bgcolor=lightyellow><tr><td><img src='correct.gif'></td><td><font color=blue face=arial size=2><b>Specified Website : </b></font><font color=red size=2 face=arial><b>" . $Website . "</b></font><br /><br /><font color=blue face=arial size=2><b> Existing UserName : </b></font><font color=red size=2 face=arial><b>" . $ExistUserName . " </b></font><br /><font color=blue size=2 face=arial><b>Existing Password : </b></font><font color=red size=2 face=arial><b>( Hidden for Security )</b></font><br /><br /><font size=2 face=arial><b>Sucessfully updated to :</b></font><br /><font color=green size=2 face=arial><b>New User ID :</b></font><font color=red size=2 face=arial><b><br />" . $UserName . "</b></font><br /><font color=green size=2 face=arial><b> New Password : </b></font><font color=red size=2 face=arial><b><br /><font color=blue size=2 face=arial><b>
+<div id=\"d_clip_container\"><div id=\"d_clip_button\" class=\"my_clip_button\"><b>Copy To Clipboard..</b></div>			</div>
+				</div><textarea id=\"fe_text\" cols=50 rows=5 onChange=\"clip.setText(this.value)\" style=\"display:none\">" . $NewPassword . "</textarea></font>";
+                echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=# onclick=\"HideRecords()\">Hide</a></td></tr></table></center></b></b></font>";
+                }
+              else
+                {
+                echo "<center><table bgcolor=yellow height=25 width=350><tr align=center valign=middle><td><font color=red size=2 face=arial><b>Sorry an error occured while query of database</b></font></td></tr></table></center>";
+                }
+            }
+          else
+        if ($count > 1)
+            {
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Multiple found records for Website " . $Website . "" . $nt);
+            fclose($file);
+            $sql10 = "SELECT * FROM pwdmngr WHERE Website='$Website' AND UserName='$UserName1'";
+            $result10 = mysql_query($sql10);
+            $row = mysql_fetch_array($result10) or die(mysql_error());
+            $ExistUserName1 = $row['UserName'];
+            $ExistPassword1 = $row['Password'];
+            include "../../config.php";
+            $NewPassword = $Password;
+            $encrypt = $Password;
+            $encrypt = serialize($encrypt);
+            $iv = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_CBC) , MCRYPT_DEV_URANDOM);
+            $key = pack('H*', $key);
+            $mac = hash_hmac('sha256', $encrypt, substr(bin2hex($key) , -32));
+            $passcrypt = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $encrypt . $mac, MCRYPT_MODE_CBC, $iv);
+            $encoded = base64_encode($passcrypt) . '|' . base64_encode($iv);
+            $Password = $encoded;
+            $sql3 = "Update pwdmngr set UserName='$UserName', Password='$Password' WHERE Website='$Website' and UserName='$UserName1'";
+            $result3 = mysql_query($sql3);
+            if ($result3)
+                {
+                $file = fopen("../../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Successfully found record for Website " . $Website . " and Username " . $UserName1 . "" . $nt);
+                fclose($file);
+                $file = fopen("../../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Successfully updated record for Website " . $Website . " and Username " . $UserName1 . "" . $nt);
+                fclose($file);
+                echo "<center><table bgcolor='lightyellow' width=400><tr><td><img src='correct.gif'></td><td><font color=blue face=arial size=2><b>Specified Website : </b></font><font color=red size=2 face=arial><b>" . $Website . "</b></font><br /><br /><font color=blue face=arial size=2><b> Existing UserName : </b></font><font color=red size=2 face=arial><b>" . $ExistUserName1 . " </b></font><br /><font color=blue size=2 face=arial><b>Existing Password : </b></font><font color=red size=2 face=arial><b>( Hidden for security )</b></font><br /><br /><font size=2 face=arial><b>Sucessfully updated to :</b></font><br /><font color=green size=2 face=arial><b>New User ID :</b></font><br /><font color=red size=2 face=arial><b> " . $UserName . "</b></font><br /><font color=green size=2 face=arial><b> New Password : </b></font><font color=blue size=2 face=arial><b><br />
+<div id=\"d_clip_container\"><div id=\"d_clip_button\" class=\"my_clip_button\"><b>Copy To Clipboard..</b></div>			</div>
+				</div><textarea id=\"fe_text\" cols=50 rows=5 onChange=\"clip.setText(this.value)\" style=\"display:none\">" . $NewPassword . "</textarea></font>";
+                echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=# onclick=\"HideRecords()\">Hide</a></td></tr></table></center></b></b></font>";
+                }
+            }
+          else
+            {
+            echo "<center><table bgcolor=yellow height=25 width=300><tr align=center valign=middle><td><font color=red size=2 face=arial><b>No such record found to Update. Want this record in the database Then <a href=insert>Click here</a></b></font></td></tr></table></center>";
+            }
+
+        mysql_close($con);
+        }
+      else
+        {
+        $file = fopen("../../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Not logged in " . $nt);
+        fclose($file);
+        echo "<b><table bgcolor=lightyellow><tr><td><font size=2 face=arial color=red>Not Logged in. Please <a href=../index?continue=files/update>Login</a> to continue</font></td></tr></table></b>";
+        }
+    }
+  else
+    {
+    $file = fopen("../../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager is locked" . $nt);
+    fclose($file);
+    echo "<b><table bgcolor=lightyellow><tr><td><font size=2 face=arial color=red>Password Manager locked itself due to security purposes..</font></td></tr></table></b>";
+    }
+
+?>

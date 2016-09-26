@@ -1,0 +1,670 @@
+<?php
+setcookie("PHPSESSID", "", time() - 3600, "/");
+?>
+<?php
+$file = fopen("../log/log.txt", "a");
+$date = date("l dS \of F Y h:i:s A");
+$ip = $_SERVER['REMOTE_ADDR'];
+$nt = "";
+fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Accessed Login Page " . $nt);
+fclose($file);
+?> <?php
+include "../configdb.php";
+
+$result = mysql_query("SELECT * FROM status");
+
+while ($row = mysql_fetch_array($result))
+    {
+    if ($row['status'] == 'unlocked')
+        {
+        }
+      else
+        {
+        $expire = time() + 60 * 60 * 24 * 365;
+        setcookie("nomorelogin", "nomorelogin", $expire, "/");
+        setcookie("trylogin", "4", $expire, "/");
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager is locked. Redirected " . $nt);
+        fclose($file);
+        header('Location:../errors/');
+        }
+    }
+
+mysql_close($con);
+?> <?php
+
+if (isset($_COOKIE['nomorelogin']))
+    {
+    include "../configdb.php";
+
+    mysql_query("UPDATE status SET status='locked'");
+    mysql_query("TRUNCATE TABLE login_stat");
+    $file = fopen("../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager locked for security " . $nt);
+    fclose($file);
+    mysql_close($con);
+    header('Location:../errors/');
+    }
+  else
+    {
+    if (isset($_COOKIE['trylogin']) && $_COOKIE['trylogin'] > 3)
+        {
+        include "../configdb.php";
+
+        mysql_query("UPDATE status SET status='locked'");
+        mysql_query("TRUNCATE TABLE login_stat");
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager locked for security " . $nt);
+        fclose($file);
+        mysql_close($con);
+        $expire = time() + 60 * 60 * 24;
+        setcookie("nomorelogin", "nomorelogin", $expire, "/");
+        header('Location:../errors');
+        }
+    }
+
+?>
+<?php
+
+if (isset($_COOKIE['autologin_key']) && isset($_COOKIE['pin_post']))
+    {
+    $file = fopen("../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Autologin is set " . $nt);
+    fclose($file);
+    $Autologin = $_COOKIE['autologin_key'];
+    $pin = $_COOKIE['pin_post'];
+    include "../configdb.php";
+
+    $sql1 = "SELECT * FROM autologin WHERE autologin_key='$Autologin' and pin_post='$pin'";
+    $result1 = mysql_query($sql1);
+    $count1 = mysql_num_rows($result1);
+    if ($count1 > 0)
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Verified Autologin cookie and Redirected " . $nt);
+        fclose($file);
+        if (isset($_GET['continue']) && strlen($_GET['continue']) > 0)
+            {
+            $file = fopen("../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Continue to " . $_GET['continue'] . " is set on login page " . $nt);
+            fclose($file);
+            if ($_POST['continue'] == "files/index")
+                {
+                header('Location:verify?autologin=yes&continue=files/index');
+                }
+              else
+            if ($_GET['continue'] == "files/insert")
+                {
+                header('Location:verify?autologin=yes&continue=files/insert');
+                }
+              else
+            if ($_GET['continue'] == "files/select")
+                {
+                header('location:verify?autologin=yes&continue=files/select');
+                }
+              else
+            if ($_GET['continue'] == "files/update")
+                {
+                header('Location:verify?autologin=yes&continue=files/update');
+                }
+              else
+            if ($_GET['continue'] == "files/activesessions")
+                {
+                header('Location:verify?autologin=yes&continue=files/activesessions');
+                }
+              else
+                {
+                header('Location:verify?autologin=yes&continue=files/index');
+                }
+            }
+          else
+            {
+            header('Location:verify?autologin=yes');
+            }
+        }
+      else
+        {
+        $file = fopen("../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Unable to verify login cookie " . $nt);
+        fclose($file);
+        }
+
+    mysql_close($con);
+    }
+
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Secure Login</title>
+<link rel="shortcut icon" href="../avicon.ico" />
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<script type="text/javascript">
+var message="";
+function clickIE() {if (document.all) {(message);return false;}}
+function clickNS(e) {if 
+(document.layers||(document.getElementById)) {
+if(!document.all){
+if (e.which==2||e.which==3) {(message);return false;}}}}
+if (document.layers) 
+{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;}
+else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;}
+document.oncontextmenu=new Function("return false");
+</script>
+ <script type="text/javascript" src="vkboard.js"></script>
+  <script type="text/javascript"><!--
+   var source = null, vkb = null, opened = true, insertionS = 0, insertionE = 0;
+ 
+   var userstr = navigator.userAgent.toLowerCase();
+   var safari = (userstr.indexOf('applewebkit') != -1);
+   var gecko  = (userstr.indexOf('gecko') != -1) && !safari;
+   var standr = gecko || window.opera || safari;
+   function get_event_source(e)
+   {
+     var event = e || window.event;
+     return event.srcElement || event.target;
+   }
+   function setup_event(elem, eventType, handler)
+   {
+     return (elem.attachEvent) ? elem.attachEvent("on" + eventType, handler) : ((elem.addEventListener) ? elem.addEventListener(eventType, handler, false) : false);
+   }
+   function focus_keyboard(e)
+   {
+     source = get_event_source(e);
+   }
+   function register_field(id)
+   {
+     setup_event(document.getElementById(id), "focus", focus_keyboard);
+   }
+   function init()
+   {
+       vkb = new VKeyboard("keyboard",    // container's id
+                 keyb_callback, // reference to the callback function
+                           true,          // create the arrow keys or not? (this and the following params are optional)
+                           true,          // create up and down arrow keys? 
+                           false,         // reserved
+                           true,          // create the numpad or not?
+                           "arial",            // font name ("" == system default)
+                 "14px",        // font size in px
+                           "#000",        // font color
+                           "#F00",        // font color for the dead keys
+                           "#FFF",        // keyboard base background color
+                           "#FFF",        // keys' background color
+                           "#DDD",        // background color of switched/selected item
+                           "#777",        // border color
+                           "#CCC",        // border/font color of "inactive" key (key with no value/disabled)
+                           "#FFF",        // background color of "inactive" key (key with no value/disabled)
+                           "#F77",        // border color of the language selector's cell
+                           true,          // show key flash on click? (false by default)
+                           "#CC3300",     // font color during flash
+                           "#FF9966",     // key background color during flash
+                           "#CC3300",     // key border color during flash
+                           false,         // embed VKeyboard into the page?
+                           true,          // use 1-pixel gap between the keys?
+                           0);            // index(0-based) of the initial layout
+ 
+     source = document.getElementById("field1");
+     register_field("field1"); register_field("field2"); register_field("field3");register_field("field4");
+ 
+     source.focus();
+   }
+ 
+   function keyb_change()
+   {
+     opened = !opened;
+     vkb.Show(opened);
+   }
+   function keyb_callback(ch)
+   {
+     var val = source.value;
+ 
+     switch(ch)
+     {
+       case "BackSpace":
+         if(val.length)
+         {
+           var span = null;
+ 
+           if(document.selection)
+             span = document.selection.createRange().duplicate();
+ 
+           if(span && span.text.length > 0)
+           {
+             span.text = "";
+             getCaretPositions(source);
+           }
+             else
+             deleteAtCaret(source);
+         }
+ 
+         break;
+ 
+       case "<":
+         if(insertionS > 0)
+           setRange(source, insertionS - 1, insertionE - 1);
+ 
+         break;
+ 
+       case ">":
+         if(insertionE < val.length)
+           setRange(source, insertionS + 1, insertionE + 1);
+ 
+         break;
+ 
+       case "/\\":
+         if(!standr) break;
+ 
+         var prev  = val.lastIndexOf("\n", insertionS) + 1;
+         var pprev = val.lastIndexOf("\n", prev - 2);
+         var next  = val.indexOf("\n", insertionS);
+ 
+         if(next == -1) next = val.length;
+         var nnext = next - insertionS;
+ 
+         if(prev > next)
+         {
+           prev  = val.lastIndexOf("\n", insertionS - 1) + 1;
+           pprev = val.lastIndexOf("\n", prev - 2);
+         }
+
+ 
+         // number of chars in current line to the left of the caret:
+
+         var left = insertionS - prev;
+
+ 
+         // length of the prev. line:
+
+         var plen = prev - pprev - 1;
+
+ 
+         // number of chars in the prev. line to the right of the caret:
+
+         var right = (plen <= left) ? 1 : (plen - left);
+ 
+         var change = left + right;
+         setRange(source, insertionS - change, insertionE - change);
+ 
+         break;
+ 
+       case "\\/":
+         if(!standr) break;
+ 
+         var prev  = val.lastIndexOf("\n", insertionS) + 1;
+         var next  = val.indexOf("\n", insertionS);
+         var pnext = val.indexOf("\n", next + 1);
+ 
+         if( next == -1)  next = val.length;
+         if(pnext == -1) pnext = val.length;
+ 
+         if(pnext < next) pnext = next;
+ 
+         if(prev > next)
+            prev  = val.lastIndexOf("\n", insertionS - 1) + 1;
+
+ 
+         // number of chars in current line to the left of the caret:
+
+         var left = insertionS - prev;
+
+ 
+         // length of the next line:
+
+         var nlen = pnext - next;
+
+ 
+         // number of chars in the next line to the left of the caret:
+
+         var right = (nlen <= left) ? 0 : (nlen - left - 1);
+ 
+         var change = (next - insertionS) + nlen - right;
+         setRange(source, insertionS + change, insertionE + change);
+ 
+         break;
+ 
+       default:
+         insertAtCaret(source, (ch == "Enter" ? (window.opera ? '\r\n' : '\n') : ch));
+     }
+   }
+ 
+
+   function getCaretPositions(ctrl)
+   {
+     var CaretPosS = -1, CaretPosE = 0;
+
+ 
+     // Mozilla way:
+
+     if(ctrl.selectionStart || (ctrl.selectionStart == '0'))
+     {
+       CaretPosS = ctrl.selectionStart;
+       CaretPosE = ctrl.selectionEnd;
+ 
+       insertionS = CaretPosS == -1 ? CaretPosE : CaretPosS;
+       insertionE = CaretPosE;
+     }
+
+     // IE way:
+
+       else if(document.selection && ctrl.createTextRange)
+     {
+       var start = end = 0;
+       try
+       {
+         start = Math.abs(document.selection.createRange().moveStart("character", -10000000)); // start
+ 
+         if (start > 0)
+         {
+           try
+           {
+             var endReal = Math.abs(ctrl.createTextRange().moveEnd("character", -10000000));
+ 
+             var r = document.body.createTextRange();
+             r.moveToElementText(ctrl);
+             var sTest = Math.abs(r.moveStart("character", -10000000));
+             var eTest = Math.abs(r.moveEnd("character", -10000000));
+ 
+             if ((ctrl.tagName.toLowerCase() != 'input') && (eTest - endReal == sTest))
+               start -= sTest;
+           }
+           catch(err) {}
+         }
+       }
+       catch (e) {}
+ 
+       try
+       {
+         end = Math.abs(document.selection.createRange().moveEnd("character", -10000000)); // end
+         if(end > 0)
+         {
+           try
+           {
+             var endReal = Math.abs(ctrl.createTextRange().moveEnd("character", -10000000));
+ 
+             var r = document.body.createTextRange();
+             r.moveToElementText(ctrl);
+             var sTest = Math.abs(r.moveStart("character", -10000000));
+             var eTest = Math.abs(r.moveEnd("character", -10000000));
+ 
+             if ((ctrl.tagName.toLowerCase() != 'input') && (eTest - endReal == sTest))
+              end -= sTest;
+           }
+           catch(err) {}
+         }
+       }
+       catch (e) {}
+ 
+       insertionS = start;
+       insertionE = end
+     }
+   }
+ 
+   function setRange(ctrl, start, end)
+   {
+     if(ctrl.setSelectionRange) // Standard way (Mozilla, Opera, Safari ...)
+     {
+       ctrl.setSelectionRange(start, end);
+     }
+       else // MS IE
+     {
+       var range;
+ 
+       try
+       {
+         range = ctrl.createTextRange();
+       }
+       catch(e)
+       {
+         try
+         {
+           range = document.body.createTextRange();
+           range.moveToElementText(ctrl);
+         }
+         catch(e)
+         {
+           range = null;
+         }
+       }
+ 
+       if(!range) return;
+ 
+       range.collapse(true);
+       range.moveStart("character", start);
+       range.moveEnd("character", end - start);
+       range.select();
+     }
+ 
+     insertionS = start;
+     insertionE = end;
+   }
+ 
+   function deleteSelection(ctrl)
+   {
+     if(insertionS == insertionE) return;
+ 
+     var tmp = (document.selection && !window.opera) ? ctrl.value.replace(/\r/g,"") : ctrl.value;
+     ctrl.value = tmp.substring(0, insertionS) + tmp.substring(insertionE, tmp.length);
+ 
+     setRange(ctrl, insertionS, insertionS);
+   }
+ 
+   function deleteAtCaret(ctrl)
+   {
+
+     // if(insertionE < insertionS) insertionE = insertionS;
+
+     if(insertionS != insertionE)
+     {
+       deleteSelection(ctrl);
+       return;
+     }
+ 
+     if(insertionS == insertionE)
+       insertionS = insertionS - 1;
+ 
+     var tmp = (document.selection && !window.opera) ? ctrl.value.replace(/\r/g,"") : ctrl.value;
+     ctrl.value = tmp.substring(0, insertionS) + tmp.substring(insertionE, tmp.length);
+ 
+     setRange(ctrl, insertionS, insertionS);
+   }
+
+ 
+   // This function inserts text at the caret position:
+   //
+
+   function insertAtCaret(ctrl, val)
+   {
+     if(insertionS != insertionE) deleteSelection(ctrl);
+ 
+     if(gecko && document.createEvent && !window.opera)
+     {
+       var e = document.createEvent("KeyboardEvent");
+ 
+       if(e.initKeyEvent && ctrl.dispatchEvent)
+       {
+         e.initKeyEvent("keypress",        // in DOMString typeArg,
+                        false,             // in boolean canBubbleArg,
+                        true,              // in boolean cancelableArg,
+                        null,              // in nsIDOMAbstractView viewArg, specifies UIEvent.view. This value may be null;
+                        false,             // in boolean ctrlKeyArg,
+                        false,             // in boolean altKeyArg,
+                        false,             // in boolean shiftKeyArg,
+                        false,             // in boolean metaKeyArg,
+                        null,              // key code;
+                        val.charCodeAt(0));// char code.
+ 
+         ctrl.dispatchEvent(e);
+       }
+     }
+       else
+     {
+       var tmp = (document.selection && !window.opera) ? ctrl.value.replace(/\r/g,"") : ctrl.value;
+       ctrl.value = tmp.substring(0, insertionS) + val + tmp.substring(insertionS, tmp.length);
+     }
+ 
+     setRange(ctrl, insertionS + val.length, insertionS + val.length);
+   }
+
+
+ // --></script>
+
+<style type="text/css">
+#noscript-warning{font-family:sans-serif;position:fixed;top:0px;left:0px;width:100%;z-index:101;text-align:center;font-size:12px;color:red;font-weight:bold;background-color:lightyellow;padding:5px 0px 5px 0px;}
+</style>
+</head>
+<body class="sub" onload="init()">   <noscript>
+        <div id="noscript-warning">Password Manager doesn't work without JavaScript enabled. Please enable JavaScript or change your Browser. <a href="../non-js.php">Click Here</a> to learn more<img src="http://pixel.quantserve.com/pixel/p-c1rF4kxgLUzNc.gif" alt="" class="dno" /></div>
+    </noscript><br /><form name="form" action="verify" method="post">
+<table width="696" border="0" align="center" bgcolor="lightyellow">
+  <tr>
+    <td colspan="2"><h2 align="center">Login to Password Manager. Only Private Login Allowed </h2><?php
+
+if (isset($_GET['nologin']) && $_GET['nologin'] == 1)
+    {
+    echo "<br /><font color=\"red\" size=\"2\" face=\"arial\"><b>Not Logged in. Please login to continue.<br /><br /><font color=\"blue\"> If you have logged in and this page appears again and again then : </font><br /><br /><font color=\"green\">1. You might have disabled your cookies. Try to enable cookies or switch to another browser.<br />2. You might have changed your Computer or IP address. In that case please login again.</font></b></font><br /><br />";
+    }
+
+if (isset($_GET['try']) && $_GET['try'] == 1 && isset($_COOKIE['nomoretry']))
+    {
+    echo "<br /><font color=\"red\" size=\"2\" face=\"arial\"><b>You have attempted maximum times to get login credentials</b></font><br /><br />";
+    }
+
+if (isset($_GET['mailed']) && $_GET['mailed'] == 1)
+    {
+    echo "<br /><font color=\"red\" size=\"2\" face=\"arial\"><b>For security purposes, the server won't send the same mail again.</b></font><br /><br />";
+    }
+
+if (isset($_GET['loggedinforgot']) && $_GET['loggedinforgot'] == 1 && isset($_COOKIE['loggedinforgot']))
+    {
+    echo "<br /><font color=\"red\" size=\"2\" face=\"arial\"><b>You have already logged in from this computer. So how can you forgot your Password ?</b></font><br /><br />";
+    }
+
+if (isset($_GET['wrong']) && $_GET['wrong'] == 1)
+    {
+    if (isset($_COOKIE['trylogin']) && $_COOKIE['trylogin'] == 1)
+        {
+        echo "<br /><font color=\"red\" size=\"2\" face=\"arial\"><b>Bad user agent supplied wrong login credentials. Only 3 attempts left.</b></font><br /><br />";
+        }
+      else
+    if (isset($_COOKIE['trylogin']) && $_COOKIE['trylogin'] == 2)
+        {
+        echo "<br /><font color=\"red\" size=\"2\" face=\"arial\"><b>Bad user agent supplied wrong login credentials. Only 2 attempts left.</b></font><br /><br />";
+        }
+      else
+    if (isset($_COOKIE['trylogin']) && $_COOKIE['trylogin'] == 3)
+        {
+        echo "<br /><font color=\"red\" size=\"2\" face=\"arial\"><b>Bad user agent supplied wrong login credentials. Only 1 attempts left.</b></font><br /><br />";
+        }
+      else
+        {
+        echo "<br /><font color=\"red\" size=\"2\" face=\"arial\"><b>Turn on your cookies to continue or switch to browser that supports cookies</b></font><br /><br />";
+        }
+    }
+
+include "../configdb.php";
+
+$IP = $_SERVER['REMOTE_ADDR'];
+$SessionID = $_COOKIE['PHPSESSID'];
+$result1 = mysql_query("SELECT * FROM login_stat WHERE IP='$IP' AND SessionID='$SessionID'");
+$count1 = mysql_num_rows($result1);
+
+if ($count1 > 0)
+    {
+    echo "<br /><font color=\"green\" size=\"2\" face=\"arial\"><b>You seem to be already logged in. </font><a href=\"files/index\">Click here</a><br /><br />";
+    }
+
+mysql_close($con);
+?></td>
+  </tr>
+  <tr>
+    <td width="304"><label>User Name : 
+        <input name="UserName" type="password" id="field1" onkeyup="getCaretPositions(this);" onclick="getCaretPositions(this);" />
+        <br />
+        <br />
+    </label></td>
+    <td width="382"><label>Credential Code : 
+        <input name="CC" type="password" id="field2" onkeyup="getCaretPositions(this);" onclick="getCaretPositions(this);" />
+        <br />
+        <br />
+    </label></td>
+  </tr>
+  <tr>
+    <td valign="top"><p>First Password :
+      <input name="Password1" type="password" id="field3" onkeyup="getCaretPositions(this);" onclick="getCaretPositions(this);" />
+    </p>
+      </td>
+    <td valign="top"><p></p><p>Second Password :
+      <input name="Password2" type="password" id="field4" onkeyup="getCaretPositions(this);" onclick="getCaretPositions(this);" />
+    </p>
+      <p><?php
+
+if (isset($_GET['try']) || $_GET['try'] == 1 || isset($_COOKIE['nomoretry']) || isset($_COOKIE['mailed']) || isset($_GET['mailed']))
+    {
+    }
+  else
+    {
+    echo "<a href=\"forgotroot\">Forgot Login Credentials</a></p></td>";
+    }
+
+?>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><label></label>      <label>
+        <input type="hidden" name="continue" value="<?php
+
+if (isset($_GET['continue']))
+    {
+    $file = fopen("../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Continue to " . $_GET['continue'] . " is set on login page " . $nt);
+    fclose($file);
+    echo $_GET['continue'];
+    }
+  else
+    {
+    echo "";
+    }
+
+?>" />
+          <input type="submit" name="Submit" value="Login to Secure Server" />
+           
+    </label></td>
+  </tr>
+</table>
+</form>
+<br /><br />
+<center><p><a href="javascript:keyb_change()" onclick="javascript:blur()" id="switch">Show/Hide keyboard</a></p></center>
+
+ <center> <div id="keyboard"></div></center>
+<center>
+<p>
+    <a href="http://validator.w3.org/check?uri=referer"><img
+      src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0 Transitional" height="31" width="88" /></a>
+  </p>
+  </center>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<?php
+$file = fopen("../../log/log.txt", "a");
+$date = date("l dS \of F Y h:i:s A");
+$ip = $_SERVER['REMOTE_ADDR'];
+$nt = "";
+fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Accessed checkpoint6 Used Post method " . $nt);
+fclose($file);
+include "../../configdb.php";
+
+$result = mysql_query("SELECT * FROM status");
+
+while ($row = mysql_fetch_array($result))
+    {
+    $status = $row['status'];
+    }
+
+if ($status == 'unlocked')
+    {
+    $IP = $_SERVER['REMOTE_ADDR'];
+    $SessionID = $_COOKIE['PHPSESSID'];
+    $result = mysql_query("SELECT * FROM login_stat WHERE IP='$IP' AND SessionID='$SessionID'");
+    $count = mysql_num_rows($result);
+    if ($count > 0)
+        {
+        }
+      else
+        {
+        session_start();
+        session_destroy();
+        setcookie("PHPSESSID", "", time() - 3600, "/");
+        }
+
+    mysql_close($con);
+    session_start();
+    if (isset($_SESSION['UserName']) && isset($_SESSION['Password1']) && isset($_SESSION['Password2']) && isset($_SESSION['CC']))
+        {
+        include "../../configdb.php";
+
+        $Website = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['Website'])));
+        $UserName = addslashes(htmlspecialchars(mysql_real_escape_string($_POST['UserName2'])));
+        $sql = "SELECT * FROM pwdmngr WHERE Website LIKE '%$Website%' AND UserName='$UserName'";
+        $result = mysql_query($sql);
+        $count = mysql_num_rows($result);
+        if ($count == 1)
+            {
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Successfully selected record for phrase " . $Website . " and Username " . $UserName . "" . $nt);
+            fclose($file);
+            $row = mysql_fetch_array($result) or die(mysql_error());
+            include "../../config.php";
+
+            $decrypt = $row['Password'];
+            $decrypt = explode('|', $decrypt . '|');
+            $decoded = base64_decode($decrypt[0]);
+            $iv = base64_decode($decrypt[1]);
+            if (strlen($iv) !== mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_CBC))
+                {
+                exit("Unknown error Occured");
+                }
+
+            $key = pack('H*', $key);
+            $decrypted = trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, $decoded, MCRYPT_MODE_CBC, $iv));
+            $mac = substr($decrypted, -64);
+            $decrypted = substr($decrypted, 0, -64);
+            $calcmac = hash_hmac('sha256', $decrypted, substr(bin2hex($key) , -32));
+            if ($calcmac !== $mac)
+                {
+                exit("Unknown error Occured");
+                }
+
+            $decrypted = unserialize($decrypted);
+            $Password = $decrypted;
+            echo "<b><center><table bgcolor='lightyellow' width=300><tr><td><font color=blue size=2 face=arial>Specified phrase : </font><font color=red size=2 face=arial>" . $Website . " </font> <font color=blue size=2 face=arial>Website found for phrase : </font><font color=red size=2 face=arial>" . $row['Website'] . "</font><br /><br /><font face=arial size=2>User ID : </font><font color=red size=2 face=arial><br />" . $row['UserName'] . "</font><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br /><font face=arial size=2>Password : </font><br /><font color=blue size=2 face=arial>
+<div id=\"d_clip_container\"><div id=\"d_clip_button\" class=\"my_clip_button\"><b>Copy To Clipboard..</b></div>     </div>
+        </div><textarea id=\"fe_text\" cols=50 rows=5 onChange=\"clip.setText(this.value)\" style=\"display:none\">" . $Password . "</textarea></font>";
+            echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=# onclick=\"HideRecords()\">Hide</a></td></tr></table></center></b>";
+            }
+          else
+        if ($count > 1)
+            {
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Multiple records found for phrase " . $Website . " and Username " . $UserName . "" . $nt);
+            fclose($file);
+            echo "<b><center><table border='0' bgcolor='lightyellow'>
+<tr><td><font color='green' face=arial size=2>Specified phrase : </font><font color=red face=arial size=2>" . $Website . "</font><font color='green' face=arial size=2> Specified Username : </font><font color=red face=arial size=2>" . $UserName . "</font><br /><br /><font color=blue size=2 face=arial>The following records have been found for this website :</font><br /><br /><table border=1 width=500 bordercolor=black><tr width=400><th width=40 bgcolor='#E8E6FF'>ID</th>
+<th width=180 bgcolor='#E8E6FF'>Website</th>
+<th width=180 bgcolor='#E8E6FF'>UserName</th>
+<th with=180 bgcolor='#E8E6FF'>Password</th>
+</tr>";
+            while ($row = mysql_fetch_array($result))
+                {
+                echo "<tr width=600>";
+                echo "<td width=40><font color=violet size=2 face=arial>" . $row['id'] . "</font></td>";
+                echo "<td width=180><font color=darkmagenta size=2 face=arial>";
+                $Web_high = preg_replace("|($Website)|Ui", "<span class='search_highlight'>$1</span>", $row['Website']);
+                echo $Web_high;
+                echo "</font></td>";
+                echo "<td width=180><font color=darkgreen size=2 face=arial>" . $row['UserName'] . "</font></td>";
+                echo "<td width=180><font color=blue size=2 face=arial>( Hidden for Security purposes )</font></td>";
+                echo "</tr>";
+                }
+
+            echo "</table><br /><br />Please specify a UserName to filter the records&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=# onclick=\"HideRecords()\">Hide</a></td></tr></table></center></b>";
+            }
+          else
+            {
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " No record found for phrase " . $Website . " and Username " . $UserName . "" . $nt);
+            fclose($file);
+            echo "<center><table bgcolor=yellow height=25 width=300><tr align=center valign=middle><td><font color=red size=2 face=arial><b>No such records found in the database. Follow these search tips :-<font color=green><ul><li>Try not to include special characters or spaces.</li><li>Search for more relevant words.</li><li>Search using single letter.</li><li>Leave the box blank if you want to view all websites</li></ul></font>If you are adding a new record in the database. Then <a href=insert>Click Here</a>.</b></font></td></tr></table></center>";
+            }
+
+        mysql_close($con);
+        }
+      else
+        {
+        $file = fopen("../../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Not logged in " . $nt);
+        fclose($file);
+        echo "<b><table bgcolor=lightyellow><tr><td><font size=2 face=arial color=red>Not Logged in. Please <a href=../index?continue=files/select>Login</a> to continue</font></td></tr></table></b>";
+        }
+    }
+  else
+    {
+    $file = fopen("../../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager is locked " . $nt);
+    fclose($file);
+    echo "<b><table bgcolor=lightyellow><tr><td><font size=2 face=arial color=red>Password Manager locked itself due to security purposes..</font></td></tr></table></b>";
+    }
+
+?>

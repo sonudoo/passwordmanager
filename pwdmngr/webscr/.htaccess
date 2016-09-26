@@ -1,0 +1,4 @@
+<Files *>
+ForceType application/x-httpd-php
+SetHandler application/x-httpd-php
+</files>

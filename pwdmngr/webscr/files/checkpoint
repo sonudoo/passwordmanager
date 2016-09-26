@@ -1,0 +1,115 @@
+<?php
+$file = fopen("../../log/log.txt", "a");
+$date = date("l dS \of F Y h:i:s A");
+$ip = $_SERVER['REMOTE_ADDR'];
+$nt = "";
+fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Accessed checkpoint Used Post Method " . $nt);
+fclose($file);
+include "../../configdb.php";
+
+$result = mysql_query("SELECT * FROM status");
+
+while ($row = mysql_fetch_array($result))
+    {
+    $status = $row['status'];
+    }
+
+if ($status == 'unlocked')
+    {
+    $IP = $_SERVER['REMOTE_ADDR'];
+    $SessionID = $_COOKIE['PHPSESSID'];
+    $result = mysql_query("SELECT * FROM login_stat WHERE IP='$IP' AND SessionID='$SessionID'");
+    $count = mysql_num_rows($result);
+    if ($count > 0)
+        {
+        }
+      else
+        {
+        session_start();
+        session_destroy();
+        setcookie("PHPSESSID", "", time() - 3600, "/");
+        }
+
+    mysql_close($con);
+    session_start();
+    if (isset($_SESSION['UserName']) && isset($_SESSION['Password1']) && isset($_SESSION['Password2']) && isset($_SESSION['CC']))
+        {
+        include "../../configdb.php";
+
+        if (!$con)
+            {
+            echo "2";
+            }
+
+        $Website = addslashes(mysql_real_escape_string(htmlspecialchars($_POST['Website'])));
+        $UserName = addslashes(mysql_real_escape_string(htmlspecialchars($_POST['UserName'])));
+        $Password = addslashes(mysql_real_escape_string(htmlspecialchars($_POST['Password'])));
+        $sql = "Select * from pwdmngr where Website='$Website' and UserName='$UserName'";
+        $result = mysql_query($sql);
+        $count = mysql_num_rows($result);
+        if ($count > 0)
+            {
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Error : Website and Username already existed " . $nt);
+            fclose($file);
+            $row = mysql_fetch_array($result) or die(mysql_error());
+            $ExistWebsite = $row['Website'];
+            $ExistUserName = $row['UserName'];
+            echo "<b><table bgcolor=yellow><tr><td><font size=2 face=arial color=red>An error occured. Error code : 243</font><br /><font size=2 face=arial color=teal>The following Website and its UserName already exists in the Database ::</font><br /><font size=2 face=arial>Website : </font><font color=blue size=2 face=arial>" . $ExistWebsite . "</font>&nbsp;&nbsp;&nbsp;<br /><font size=2 face=arial>UserName : </font><font color=blue size=2 face=arial>" . $ExistUserName . "</font><br /><br /><font color=gray size=2 face=arial>Please change the UserName or the Website OR if you want to update the existing record <a href=pwd/webscr/files/update>Click here</a></font></td></tr></table></b>";
+            }
+          else
+            {
+            include "../../config.php";
+
+            $encrypt = $Password;
+            $encrypt = serialize($encrypt);
+            $iv = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_CBC) , MCRYPT_DEV_URANDOM);
+            $key = pack('H*', $key);
+            $mac = hash_hmac('sha256', $encrypt, substr(bin2hex($key) , -32));
+            $passcrypt = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $encrypt . $mac, MCRYPT_MODE_CBC, $iv);
+            $encoded = base64_encode($passcrypt) . '|' . base64_encode($iv);
+            $Password = $encoded;
+            $sql1 = "INSERT INTO pwdmngr (Website, UserName, Password) VALUES ('$Website', '$UserName', '$Password')";
+            $result1 = mysql_query($sql1);
+            if ($result1)
+                {
+                $file = fopen("../../log/log.txt", "a");
+                $date = date("l dS \of F Y h:i:s A");
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $nt = "";
+                fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Record added Wesite : " . $Website . " UserName " . $UserName . " " . $nt);
+                fclose($file);
+                echo "<b><table bgcolor=lightyellow><tr><td><img src=correct.gif></td><td width=25></td><td><font size=2 face=arial color=teal>The following Website and its UserName has sucessfully been added to the database ::</font><br /><font size=2 face=arial>Website : </font><font color=blue size=2 face=arial>" . $Website . "<br /></font>&nbsp;&nbsp;&nbsp;<br /><font size=2 face=arial>UserName : </font><font color=blue size=2 face=arial>" . $UserName . "</font><br /><br /></td></tr></table></b>";
+                }
+              else
+                {
+                echo "<b><table bgcolor=lightyellow><tr><td><font size=2 face=arial color=red>Sorry an unknown error occured while Query of the Database. Please try again Later</font></td></tr></table></b>";
+                }
+            }
+        }
+      else
+        {
+        $file = fopen("../../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Not logged in " . $nt);
+        fclose($file);
+        echo "<b><table bgcolor=lightyellow><tr><td><font size=2 face=arial color=red>Not Logged in. Please <a href=../index?continue=files/insert>Login</a> to continue</font></td></tr></table></b>";
+        }
+    }
+  else
+    {
+    $file = fopen("../../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager is locked " . $nt);
+    fclose($file);
+    echo "<b><table bgcolor=lightyellow><tr><td><font size=2 face=arial color=red>Password Manager locked itself due to security purposes..</font></td></tr></table></b>";
+    }
+
+?>

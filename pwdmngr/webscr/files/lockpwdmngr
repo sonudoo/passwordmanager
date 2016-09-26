@@ -1,0 +1,87 @@
+<?php
+$file = fopen("../../log/log.txt", "a");
+$date = date("l dS \of F Y h:i:s A");
+$ip = $_SERVER['REMOTE_ADDR'];
+$nt = "";
+fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Accessed lockpwdmngr Used post method" . $nt);
+fclose($file);
+include "../../configdb.php";
+
+$result = mysql_query("SELECT * FROM status");
+
+while ($row = mysql_fetch_array($result))
+    {
+    $status = $row['status'];
+    }
+
+if ($status == 'unlocked')
+    {
+    $IP = $_SERVER['REMOTE_ADDR'];
+    $SessionID = $_COOKIE['PHPSESSID'];
+    $result = mysql_query("SELECT * FROM login_stat WHERE IP='$IP' AND SessionID='$SessionID'");
+    $count = mysql_num_rows($result);
+    if ($count > 0)
+        {
+        }
+      else
+        {
+        session_start();
+        session_destroy();
+        setcookie("PHPSESSID", "", time() - 3600, "/");
+        }
+
+    session_start();
+    if (isset($_SESSION['UserName']) && isset($_SESSION['Password1']) && isset($_SESSION['Password2']) && isset($_SESSION['CC']))
+        {
+        $secret_word1 = addslashes(mysql_real_escape_string(htmlspecialchars($_POST['secret_word'])));
+        include "../../config.php";
+
+        if ($secret_word1 == $secret_word)
+            {
+            mysql_query("TRUNCATE table login_stat");
+            mysql_query("TRUNCATE table unlocked");
+            mysql_query("UPDATE status SET status='locked'");
+            session_destroy();
+            setcookie("lockednow", "lockednow", time() + 3600, "/");
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Correct security answer Password Manager has been physically locked" . $nt);
+            fclose($file);
+            header('location:locked');
+            }
+          else
+            {
+            $file = fopen("../../log/log.txt", "a");
+            $date = date("l dS \of F Y h:i:s A");
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $nt = "";
+            fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Unable to lock Password Manager Wrong security answer" . $nt);
+            fclose($file);
+            header('location:activesessions?wrong=2');
+            }
+        }
+      else
+        {
+        $file = fopen("../../log/log.txt", "a");
+        $date = date("l dS \of F Y h:i:s A");
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $nt = "";
+        fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Not logged in Redirected to login page" . $nt);
+        fclose($file);
+        header('Location:../index?nologin=1&continue=files/activesessions');
+        }
+    }
+  else
+    {
+    $file = fopen("../../log/log.txt", "a");
+    $date = date("l dS \of F Y h:i:s A");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $nt = "";
+    fwrite($file, "\r\n" . $date . " IP Address " . $ip . " Password Manager is already locked" . $nt);
+    fclose($file);
+    header('Location:../../errors/');
+    }
+
+?>
