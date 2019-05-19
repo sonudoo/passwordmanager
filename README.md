@@ -3,7 +3,7 @@ Secure Password Manager based on PHP, JS and HTML
 
 The password manager is built for personal use only. It is recommended not to host the password manager on the web or permit it to be accessible remotely. Though the password manager is built to be highly secure, password protection is not guaranteed (Bruteforce is always a technique to hack).
 
-#Setup
+# Setup
 
 To setup the password manager on your computer follow the following steps : 
 
@@ -25,7 +25,7 @@ To setup the password manager on your computer follow the following steps :
 
 7. Make sure to delete the "pwdmngr.sql" and "AutologinCookieSet.php" file.
 
-#Features
+# Features
 
 Upon login you will see several options :
 
