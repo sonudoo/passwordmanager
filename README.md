@@ -54,8 +54,3 @@ In case you forgot your login credentials, you may look for it in the "config.ph
 
 
 All the pages in the password manager are dynamically generated and cannot be accessed by directly entering the url in browser. The pages generated are W3C certified.
-
-
-#Developer
-
-Incase you face any error please mail me at administrator [at] sonudoo.com. I hope you enjoy this app.
