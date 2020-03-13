@@ -1,4 +1,8 @@
 # passwordmanager
+
+```diff
+- This repository is no longer maintained. You can use the tool at your own risk.
+```
 Secure Password Manager based on PHP, JS and HTML
 
 The password manager is built for personal use only. It is recommended not to host the password manager on the web or permit it to be accessible remotely. Though the password manager is built to be highly secure, password protection is not guaranteed (Bruteforce is always a technique to hack).
